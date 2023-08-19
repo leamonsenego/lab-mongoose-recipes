@@ -16,8 +16,58 @@ mongoose
     return Recipe.deleteMany()
   })
   .then(() => {
-    // Run your code here, after you have insured that the connection was made
+    // use the Model.create method and pass the recipe details as an object - then console.log the title of the recipe
+    Recipe.create(data[0])
+      .then(recipe => console.log("A recipe was created:", recipe.title))
+      .catch(error => console.error("An error occurred", error));
   })
-  .catch(error => {
-    console.error('Error connecting to the database', error);
-  });
+  .then(() =>{
+    // Use insertMany to add the entire array to the database, then print the title of each recipe
+    Recipe.insertMany(data)
+      .then(insertedRecipes => {
+        console.log("All the recipes are here:", insertedRecipes.map(recipe => recipe.title))
+      })
+      .catch(error => console.error("An error occurred.", error));
+  })
+  .then(
+    // Update the Rigatoni's recipe
+    Recipe.findOneAndUpdate(
+      {title: 'Rigatoni alla Genovese'},
+      {duration: 100},
+      {new: true},
+    )
+      .then(updatedRecipe =>{
+        if (updatedRecipe){
+          console.log("A recipe was updated:", updatedRecipe.title, ".New duration: ", updatedRecipe.duration);
+        } else {
+        console.log("Recipe not found.")};
+      })
+      .catch(error =>{
+        console.log("Error updating the recipe.", error);
+      })
+  )
+  .then(
+  // Delete the Carrot cake recipe
+    Recipe.findOneAndDelete(
+      {title: 'Carrot Cake'},
+      {new: true},
+    )
+      .then(deletedRecipe =>{
+        if (deletedRecipe) {
+          console.log("A recipe was deleted:", deletedRecipe.title)
+        } else {
+          console.log("Recipe not found.")};
+        })
+      .catch(error => {
+        console.log("Error deleting the recipe.", error);
+      })
+  )
+
+// closing the connexion:
+
+process.on('SIGINT', () =>{
+  mongoose.connection.close(() =>{
+    console.log("Mongoose default connection disconnected through app terminal.");
+    process.exit(0);
+    });
+})
